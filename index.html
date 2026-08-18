@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Industrial Digital Twin | SCADA Control Center</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Dashboard Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-layout">
+        <!-- ================= SIDEBAR NAVIGATION ================= -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-microchip logo-icon"></i>
+                    <div class="brand-text">
+                        <h2>INDUSTRIAL TWIN</h2>
+                        <span>INDUSTRY 4.0 PLATFORM</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#machines" class="nav-item" data-section="machines">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Machines</span>
+                </a>
+                <a href="#sensors" class="nav-item" data-section="sensors">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span>Sensor Monitoring</span>
+                </a>
+                <a href="#digital-twin" class="nav-item" data-section="digital-twin">
+                    <i class="fa-solid fa-cubes-stacked"></i>
+                    <span>Digital Twin</span>
+                </a>
+                <a href="#analytics" class="nav-item" data-section="analytics">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analytics</span>
+                    <span class="badge badge-soon">Soon</span>
+                </a>
+                <a href="#predictive" class="nav-item" data-section="predictive">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Predictive Maintenance</span>
+                </a>
+                <a href="#ai-manager" class="nav-item" data-section="ai-manager">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>AI Factory Manager</span>
+                </a>
+                <a href="#alerts" class="nav-item" data-section="alerts">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Alerts</span>
+                    <span class="badge badge-alert" id="sidebar-alert-count">0</span>
+                </a>
+                <a href="#reports" class="nav-item" data-section="reports">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Reports</span>
+                    <span class="badge badge-soon">Soon</span>
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
+                    <span class="badge badge-soon">Soon</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-version">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>System Version 1.0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ================= MAIN CONTENT CONTAINER ================= -->
+        <main class="main-wrapper">
+            <!-- ================= TOP HEADER ================= -->
+            <header class="top-header">
+                <div class="header-title-container">
+                    <h1>AI-Powered Industrial Digital Twin</h1>
+                    <p class="tagline">A virtual factory that thinks, predicts, and manages itself.</p>
+                </div>
+
+                <div class="header-status-container">
+                    <!-- System Health Indicator -->
+                    <div class="status-pill offline" id="system-status-pill">
+                        <span class="pulse-dot"></span>
+                        <span id="system-status-text">CHECKING...</span>
+                    </div>
+
+                    <!-- Connection Status Indicator -->
+                    <div class="conn-pill" id="conn-pill">
+                        <i class="fa-solid fa-server"></i>
+                        <span id="conn-status-text">FastAPI Connecting...</span>
+                    </div>
+
+                    <!-- Last Updated Clock -->
+                    <div class="clock-box">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>Last Updated: <strong id="last-updated-time">--:--:--</strong></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ================= MAIN DASHBOARD BODY ================= -->
+            <div class="dashboard-container">
+
+                <!-- Global Offline / Error Alert Banner -->
+                <div class="system-alert-banner hidden" id="backend-offline-banner">
+                    <i class="fa-solid fa-plug-circle-xmark"></i>
+                    <div>
+                        <strong>BACKEND OFFLINE:</strong> Unable to connect to FastAPI server at <code id="api-url-display">http://127.0.0.1:8000</code>. Please make sure the FastAPI server is running.
+                    </div>
+                </div>
+
+                <!-- 1. FACTORY OVERVIEW -->
+                <section class="section-block" id="section-overview">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-industry"></i> Factory Overview</h2>
+                        <p>Real-time operational intelligence and machine health monitoring</p>
+                    </div>
+
+                    <div class="overview-cards-grid">
+                        <div class="metric-card cyan">
+                            <div class="card-icon"><i class="fa-solid fa-server"></i></div>
+                            <div class="card-info">
+                                <span class="card-label">Total Machines</span>
+                                <h3 class="card-value" id="metric-total-machines">0</h3>
+                            </div>
+                        </div>
+
+                        <div class="metric-card green">
+                            <div class="card-icon"><i class="fa-solid fa-circle-play"></i></div>
+                            <div class="card-info">
+                                <span class="card-label">Running</span>
+                                <h3 class="card-value" id="metric-running-machines">0</h3>
+                            </div>
+                        </div>
+
+                        <div class="metric-card amber">
+                            <div class="card-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                            <div class="card-info">
+                                <span class="card-label">Warning</span>
+                                <h3 class="card-value" id="metric-warning-machines">0</h3>
+                            </div>
+                        </div>
+
+                        <div class="metric-card red">
+                            <div class="card-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+                            <div class="card-info">
+                                <span class="card-label">Critical</span>
+                                <h3 class="card-value" id="metric-critical-machines">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. MACHINE OVERVIEW -->
+                <section class="section-block" id="section-machines">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-cubes"></i> Machine Overview</h2>
+                        <p>Live health and status per registered machine unit</p>
+                    </div>
+
+                    <div class="machines-grid" id="machines-container">
+                        <!-- Machine Cards standard layout rendered dynamically -->
+                        <div class="loading-placeholder">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading machine information...
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. REAL-TIME SENSOR MONITORING -->
+                <section class="section-block" id="section-sensors">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-gauge-simple-high"></i> Real-Time Sensor Monitoring</h2>
+                        <p>Live industrial sensor metrics extracted from factory telematics</p>
+                    </div>
+
+                    <div class="sensors-grid">
+                        <!-- Temperature Card -->
+                        <div class="sensor-card" id="sensor-card-temp">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-temperature-high sensor-icon temp-icon"></i> Temperature</span>
+                                <span class="status-badge normal" id="sensor-status-temp">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-temp">-- <span class="unit">°C</span></div>
+                                <div class="sensor-trend" id="sensor-trend-temp"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+
+                        <!-- Humidity Card -->
+                        <div class="sensor-card" id="sensor-card-hum">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-droplet sensor-icon hum-icon"></i> Humidity</span>
+                                <span class="status-badge normal" id="sensor-status-hum">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-hum">-- <span class="unit">%</span></div>
+                                <div class="sensor-trend" id="sensor-trend-hum"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+
+                        <!-- Vibration Card -->
+                        <div class="sensor-card" id="sensor-card-vib">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-vroom sensor-icon vib-icon"></i> Vibration</span>
+                                <span class="status-badge normal" id="sensor-status-vib">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-vib">-- <span class="unit">mm/s</span></div>
+                                <div class="sensor-trend" id="sensor-trend-vib"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+
+                        <!-- Current Card -->
+                        <div class="sensor-card" id="sensor-card-curr">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-bolt sensor-icon curr-icon"></i> Current</span>
+                                <span class="status-badge normal" id="sensor-status-curr">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-curr">-- <span class="unit">A</span></div>
+                                <div class="sensor-trend" id="sensor-trend-curr"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+
+                        <!-- Smoke Card -->
+                        <div class="sensor-card" id="sensor-card-smoke">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-smog sensor-icon smoke-icon"></i> Smoke</span>
+                                <span class="status-badge normal" id="sensor-status-smoke">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-smoke">-- <span class="unit">ppm</span></div>
+                                <div class="sensor-trend" id="sensor-trend-smoke"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+
+                        <!-- Voltage Card -->
+                        <div class="sensor-card" id="sensor-card-volt">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-plug sensor-icon volt-icon"></i> Voltage</span>
+                                <span class="status-badge normal" id="sensor-status-volt">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-volt">-- <span class="unit">V</span></div>
+                                <div class="sensor-trend" id="sensor-trend-volt"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+
+                        <!-- Power Card -->
+                        <div class="sensor-card" id="sensor-card-power">
+                            <div class="sensor-card-header">
+                                <span class="sensor-title"><i class="fa-solid fa-charging-station sensor-icon power-icon"></i> Power</span>
+                                <span class="status-badge normal" id="sensor-status-power">--</span>
+                            </div>
+                            <div class="sensor-card-body">
+                                <div class="sensor-value" id="sensor-val-power">-- <span class="unit">kW</span></div>
+                                <div class="sensor-trend" id="sensor-trend-power"><i class="fa-solid fa-minus"></i> Standard</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. LIVE SENSOR CHARTS -->
+                <section class="section-block" id="section-charts">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-chart-area"></i> Live Sensor Analytics</h2>
+                        <p>Time-series telemetry visualization based on database historical records</p>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-temperature-high"></i> Temperature vs Time (°C)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-temperature"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-droplet"></i> Humidity vs Time (%)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-humidity"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-vroom"></i> Vibration vs Time (mm/s)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-vibration"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-bolt"></i> Current vs Time (A)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-current"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-plug"></i> Voltage vs Time (V)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-voltage"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-charging-station"></i> Power vs Time (kW)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-power"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card chart-card-wide">
+                            <div class="chart-header">
+                                <h3><i class="fa-solid fa-smog"></i> Smoke vs Time (ppm)</h3>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-smoke"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. DIGITAL TWIN VISUALIZATION -->
+                <section class="section-block" id="section-digital-twin">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-network-wired"></i> Digital Factory Floor</h2>
+                        <p>2D Schematic Digital Twin visualization with real-time state synchronization</p>
+                    </div>
+
+                    <div class="digital-twin-container">
+                        <div class="twin-canvas-wrapper">
+                            <div class="twin-floorplan">
+                                <div class="twin-grid-overlay"></div>
+                                
+                                <!-- Conveyor Belt Track Line -->
+                                <div class="conveyor-track">
+                                    <div class="conveyor-pulley left"></div>
+                                    <div class="conveyor-belt-line"></div>
+                                    <div class="conveyor-pulley right"></div>
+                                    <span class="conveyor-label"><i class="fa-solid fa-arrows-left-right"></i> MAIN CONVEYOR BELT</span>
+                                </div>
+
+                                <!-- Node 1: Motor 1 -->
+                                <div class="twin-node machine-node" id="twin-node-motor1" data-machine-id="1">
+                                    <div class="node-status-glow normal" id="twin-glow-motor1"></div>
+                                    <div class="node-icon"><i class="fa-solid fa-gear fa-spin-slow"></i></div>
+                                    <div class="node-content">
+                                        <h4>MOTOR 1</h4>
+                                        <span class="node-type">DC Motor</span>
+                                        <span class="status-pill-small normal" id="twin-badge-motor1">NORMAL</span>
+                                    </div>
+                                    <div class="node-ping"></div>
+                                </div>
+
+                                <!-- Connection Line 1 to 2 -->
+                                <div class="bus-line bus-line-horizontal"></div>
+
+                                <!-- Node 2: Pump 1 -->
+                                <div class="twin-node machine-node" id="twin-node-pump1" data-machine-id="2">
+                                    <div class="node-status-glow normal" id="twin-glow-pump1"></div>
+                                    <div class="node-icon"><i class="fa-solid fa-faucet-drip"></i></div>
+                                    <div class="node-content">
+                                        <h4>PUMP 1</h4>
+                                        <span class="node-type">Hydraulic Pump</span>
+                                        <span class="status-pill-small normal" id="twin-badge-pump1">NORMAL</span>
+                                    </div>
+                                    <div class="node-ping"></div>
+                                </div>
+
+                                <!-- Connection Line to Control Panel -->
+                                <div class="bus-line bus-line-vertical"></div>
+
+                                <!-- Node 3: SCADA Central Control Panel -->
+                                <div class="twin-node control-panel-node">
+                                    <div class="node-icon"><i class="fa-solid fa-desktop"></i></div>
+                                    <div class="node-content">
+                                        <h4>SCADA CONTROL PANEL</h4>
+                                        <span class="node-type">PLC Telemetry Node</span>
+                                        <span class="status-pill-small blue"><i class="fa-solid fa-wifi"></i> ONLINE</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="twin-legend">
+                                <div class="legend-item"><span class="dot green"></span> Normal</div>
+                                <div class="legend-item"><span class="dot amber"></span> Warning</div>
+                                <div class="legend-item"><span class="dot red"></span> Critical</div>
+                                <div class="legend-item"><span class="dot cyan"></span> Control Node</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. AI FACTORY MANAGER & PREDICTIVE MAINTENANCE -->
+                <div class="two-col-grid">
+                    <!-- AI Factory Manager -->
+                    <section class="section-block" id="section-ai-manager">
+                        <div class="section-header">
+                            <h2><i class="fa-solid fa-brain"></i> AI Factory Manager</h2>
+                            <p>Autonomous factory intelligence and operational insights</p>
+                        </div>
+
+                        <div class="ai-manager-card">
+                            <div class="ai-avatar">
+                                <div class="ai-icon-ring">
+                                    <i class="fa-solid fa-robot"></i>
+                                </div>
+                                <div class="ai-status">
+                                    <span class="ai-title">Factory Manager AI</span>
+                                    <span class="ai-subtitle">Rule-Engine v1.0 Active</span>
+                                </div>
+                            </div>
+
+                            <div class="ai-feed" id="ai-feed-container">
+                                <div class="ai-message-card info">
+                                    <div class="msg-icon"><i class="fa-solid fa-circle-info"></i></div>
+                                    <div class="msg-text">
+                                        <strong>System Initialized:</strong> Autonomous monitoring active. Analyzing telematics streams from FastAPI backend.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Predictive Maintenance -->
+                    <section class="section-block" id="section-predictive">
+                        <div class="section-header">
+                            <h2><i class="fa-solid fa-chart-pie"></i> Predictive Maintenance</h2>
+                            <p>Health index scoring & failure risk estimation</p>
+                        </div>
+
+                        <div class="predictive-card">
+                            <div class="health-score-container">
+                                <div class="health-ring-wrapper">
+                                    <svg class="health-svg" viewBox="0 0 100 100">
+                                        <circle class="health-bg" cx="50" cy="50" r="42"></circle>
+                                        <circle class="health-bar" id="health-score-ring" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="26"></circle>
+                                    </svg>
+                                    <div class="health-score-value">
+                                        <span id="health-score-percent">100%</span>
+                                        <small id="health-score-status">Healthy</small>
+                                    </div>
+                                </div>
+
+                                <div class="health-details">
+                                    <div class="trend-item">
+                                        <span>Temperature Risk</span>
+                                        <div class="progress-bar-bg"><div class="progress-fill green" id="risk-temp-bar" style="width: 15%;"></div></div>
+                                    </div>
+                                    <div class="trend-item">
+                                        <span>Vibration Degradation</span>
+                                        <div class="progress-bar-bg"><div class="progress-fill green" id="risk-vib-bar" style="width: 20%;"></div></div>
+                                    </div>
+                                    <div class="trend-item">
+                                        <span>Current Spike Load</span>
+                                        <div class="progress-bar-bg"><div class="progress-fill green" id="risk-curr-bar" style="width: 10%;"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="recommendation-box" id="predictive-recommendation">
+                                <h4><i class="fa-solid fa-clipboard-check"></i> Maintenance Recommendation</h4>
+                                <p id="recommendation-text">Machines are operating within normal tolerances. Continue standard monitoring schedule.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 7. ACTIVE ALERTS -->
+                <section class="section-block" id="section-alerts">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-bell"></i> Active Alerts</h2>
+                        <p>Live threshold violation log requiring supervisor attention</p>
+                    </div>
+
+                    <div class="alerts-feed" id="alerts-feed-container">
+                        <div class="alert-item normal">
+                            <i class="fa-solid fa-circle-check alert-icon"></i>
+                            <div class="alert-content">
+                                <h4>No Active Alerts</h4>
+                                <p>All connected machines operating within normal parameters.</p>
+                            </div>
+                            <span class="alert-time">Live</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MACHINE INSPECTION MODAL ================= -->
+    <div class="modal-overlay hidden" id="machine-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="fa-solid fa-microchip modal-icon"></i>
+                    <div>
+                        <h3 id="modal-machine-name">MOTOR 1</h3>
+                        <span class="modal-subtitle" id="modal-machine-type">DC MOTOR</span>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-status-banner normal" id="modal-status-banner">
+                    <span id="modal-status-text">🟢 OPERATIONAL</span>
+                    <span class="modal-id" id="modal-machine-id">ID: #1</span>
+                </div>
+
+                <div class="modal-metrics-grid">
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-temperature-high"></i> Temp</span>
+                        <span class="value" id="modal-val-temp">-- °C</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-droplet"></i> Humidity</span>
+                        <span class="value" id="modal-val-hum">-- %</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-vroom"></i> Vibration</span>
+                        <span class="value" id="modal-val-vib">-- mm/s</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-bolt"></i> Current</span>
+                        <span class="value" id="modal-val-curr">-- A</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-plug"></i> Voltage</span>
+                        <span class="value" id="modal-val-volt">-- V</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-charging-station"></i> Power</span>
+                        <span class="value" id="modal-val-power">-- kW</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-solid fa-smog"></i> Smoke</span>
+                        <span class="value" id="modal-val-smoke">-- ppm</span>
+                    </div>
+                    <div class="modal-metric-item">
+                        <span class="label"><i class="fa-regular fa-clock"></i> Updated</span>
+                        <span class="value" id="modal-val-updated">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-trend-btn">
+                    <i class="fa-solid fa-chart-line"></i> View Sensor Trends
+                </button>
+                <button class="btn btn-primary" id="modal-dismiss-btn">Close Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="script.js"></script>
+</body>
+</html>
