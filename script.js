@@ -7,17 +7,127 @@
 // API Base URL Configuration
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-// Automatic Polling Interval (in milliseconds)
+// Automatic Polling Interval
 const POLL_INTERVAL_MS = 5000;
 
 // Configurable Thresholds for Sensor Status Logic
 const THRESHOLDS = {
-    temperature: { warning: 40, critical: 60, unit: "°C" },
-    humidity: { minNormal: 30, maxNormal: 70, warningHigh: 85, unit: "%" },
-    vibration: { warning: 3, critical: 5, unit: "mm/s" },
-    current: { warning: 5, critical: 8, unit: "A" },
-    smoke: { warning: 100, critical: 200, unit: "ppm" }
+    temperature: {
+        warning: 40,
+        critical: 60,
+        unit: "°C"
+    },
+
+    humidity: {
+        minNormal: 30,
+        maxNormal: 70,
+        warningHigh: 85,
+        unit: "%"
+    },
+
+    vibration: {
+        warning: 3,
+        critical: 5,
+        unit: "mm/s"
+    },
+
+    current: {
+        warning: 5,
+        critical: 8,
+        unit: "A"
+    },
+
+    smoke: {
+        warning: 100,
+        critical: 200,
+        unit: "ppm"
+    },
+
+    // ADDED
+    voltage: {
+        minNormal: 10,
+        maxNormal: 14,
+        warningLow: 9,
+        warningHigh: 15,
+        unit: "V"
+    },
+
+    // ADDED
+    power: {
+        warning: 100,
+        critical: 200,
+        unit: "W"
+    }
 };
+
+
+/* ============================================================================
+   VOLTAGE AND POWER HELPERS
+   ============================================================================ */
+
+// Get voltage from API data
+function getVoltage(data) {
+
+    if (!data) {
+        return null;
+    }
+
+    if (
+        data.voltage !== undefined &&
+        data.voltage !== null &&
+        data.voltage !== ""
+    ) {
+        const voltage = Number(data.voltage);
+
+        if (!Number.isNaN(voltage)) {
+            return voltage;
+        }
+    }
+
+    return null;
+}
+
+
+// Get power from API data
+function getPower(data) {
+
+    if (!data) {
+        return null;
+    }
+
+    // If power is already stored in MySQL, use it
+    if (
+        data.power !== undefined &&
+        data.power !== null &&
+        data.power !== ""
+    ) {
+        const power = Number(data.power);
+
+        if (!Number.isNaN(power)) {
+            return power;
+        }
+    }
+
+    // Otherwise calculate power using:
+    // Power = Voltage × Current
+    const voltage = getVoltage(data);
+
+    if (
+        voltage !== null &&
+        data.current !== undefined &&
+        data.current !== null
+    ) {
+
+        const current = Number(data.current);
+
+        if (!Number.isNaN(current)) {
+            return Number((voltage * current).toFixed(2));
+        }
+    }
+
+    return null;
+}
+
 
 // Global Dashboard State Store
 const state = {
@@ -30,27 +140,30 @@ const state = {
     selectedMachine: null
 };
 
+
 // DOM Content Loaded Handler
 document.addEventListener("DOMContentLoaded", () => {
+
     console.log("Industrial Digital Twin initializing...");
 
-    // Set initial display API URL
-    const apiUrlDisplay = document.getElementById("api-url-display");
-    if (apiUrlDisplay) apiUrlDisplay.textContent = API_BASE_URL;
+    const apiUrlDisplay =
+        document.getElementById("api-url-display");
 
-    // Initialize Chart.js Instances
+    if (apiUrlDisplay) {
+        apiUrlDisplay.textContent = API_BASE_URL;
+    }
+
     initCharts();
 
-    // Attach Event Listeners
     setupEventListeners();
 
-    // Immediate Initial Data Fetch
     pollFactoryData();
 
-    // Start 5-Second Polling Timer
-    setInterval(pollFactoryData, POLL_INTERVAL_MS);
+    setInterval(
+        pollFactoryData,
+        POLL_INTERVAL_MS
+    );
 });
-
 /* ============================================================================
    1. API DATA FETCHING & POLLING ENGINE
    ============================================================================ */
@@ -325,7 +438,9 @@ function renderMachineCards() {
                     </div>
                     <div class="telemetry-row">
                         <span>Power:</span>
-                        <span class="val">${getPower(data) !== null ? getPower(data) + " kW" : "--"}</span>
+                        <span class="val">
+    ${getPower(data) !== null ? getPower(data) + " W" : "--"}
+</span>
                     </div>
                     <div class="telemetry-row">
                         <span>Temperature:</span>
@@ -349,15 +464,57 @@ function renderMachineCards() {
    6. RENDER REAL-TIME SENSOR MONITORING CARDS
    ============================================================================ */
 function renderSensorCards() {
+
     const latest = state.latestDataPoint;
 
-    updateSingleSensorCard("temp", latest ? latest.temperature : null, "temperature", "°C");
-    updateSingleSensorCard("hum", latest ? latest.humidity : null, "humidity", "%");
-    updateSingleSensorCard("vib", latest ? latest.vibration : null, "vibration", "mm/s");
-    updateSingleSensorCard("curr", latest ? latest.current : null, "current", "A");
-    updateSingleSensorCard("smoke", latest ? latest.smoke : null, "smoke", "ppm");
-    updateSingleSensorCard("volt", latest ? getVoltage(latest) : null, "voltage", "V");
-    updateSingleSensorCard("power", latest ? getPower(latest) : null, "power", "kW");
+    updateSingleSensorCard(
+        "temp",
+        latest ? latest.temperature : null,
+        "temperature",
+        "°C"
+    );
+
+    updateSingleSensorCard(
+        "hum",
+        latest ? latest.humidity : null,
+        "humidity",
+        "%"
+    );
+
+    updateSingleSensorCard(
+        "vib",
+        latest ? latest.vibration : null,
+        "vibration",
+        "mm/s"
+    );
+
+    updateSingleSensorCard(
+        "curr",
+        latest ? latest.current : null,
+        "current",
+        "A"
+    );
+
+    updateSingleSensorCard(
+        "smoke",
+        latest ? latest.smoke : null,
+        "smoke",
+        "ppm"
+    );
+
+    updateSingleSensorCard(
+        "volt",
+        latest ? getVoltage(latest) : null,
+        "voltage",
+        "V"
+    );
+
+    updateSingleSensorCard(
+        "power",
+        latest ? getPower(latest) : null,
+        "power",
+        "W"
+    );
 }
 
 function updateSingleSensorCard(idKey, val, metricKey, unit) {
